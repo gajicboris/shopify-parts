@@ -96,11 +96,6 @@
     </aside>
   </div>
   <script>
-      //document.querySelector(".copyright__content").addEventListener('click', function (e) {
-      //    e.stopPropagation();
-      //    openPopup();
-      //}, false);
-      
       var options = JSON.parse(document.querySelector(".popup").getAttribute('data-popup-settings'));
       function openPopup() {
         if (!options['showOnlyOnce'] || options['showOnlyOnce'] && localStorage.getItem('newsletter_popup') === null) {
@@ -133,14 +128,7 @@
       document.querySelector("#form-popup").addEventListener('submit', function (e) {
         e.stopPropagation();
         e.preventDefault();
-    
-        // POST /contact
-        //Get the form
-        //var data = new FormData(document.getElementById("form-popup"));
-    
-        //Use fetch syntax to submit the form data
-        //fetch("/contact", { method: "post", body: data });
-        
+      
         closePopup();
         this.submit();
       }, true);
