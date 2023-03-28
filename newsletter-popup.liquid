@@ -1,0 +1,293 @@
+{% comment %}
+  Newsletter popup section for Shopify Down theme.
+  Add following line to top of the body tag in theme.liquid
+  {% section 'newsletter-popup' %}
+{% endcomment %}
+{%- if section.settings.enable_popup -%}
+{%- unless section.settings.show_only_on_index and template != 'index' -%}
+{%- unless section.settings.show_only_for_visitors and customer -%}
+  <div class="popup-overlay">
+    {% capture popup_settings %}
+      {
+        "apparitionDelay": {{ section.settings.apparition_delay | json }},
+        "showOnlyOnce": {{ section.settings.show_only_once | json }}
+      }
+    {% endcapture %}
+    <aside class="popup" data-popup-settings='{{ popup_settings }}', style="background-image: url('{{ section.settings.bg-image.src | img_url: 'master' }}')">
+      <div class="popup-dialog">
+        {%- if section.settings.title != blank -%}
+          <h3 class="popup-newsletter-title heading">{{ section.settings.title | escape }}</h3>
+        {%- endif -%}
+
+        <button
+          class="popup-newsletter-close link"
+          data-action="close-popup"
+          aria-label="{{ 'general.accessibility.close' | t }}"
+        >
+          {%- render 'icon-close', icon: 'icon-close' -%}
+        </button>
+
+        {%- if section.settings.content != blank -%}
+          <div class="popup-newsletter-content rte">
+            {{ section.settings.content }}
+          </div>
+        {%- endif -%}
+
+        {%- if section.settings.show_newsletter -%}
+          {% form 'customer', class: 'newsletter-form', id: 'form-popup' %}
+            <input type="hidden" name="contact[tags]" value="newsletter">
+            <div class="newsletter-form__field-wrapper">
+              <div class="field">
+                <input
+                  id="NewsletterForm--{{ section.id }}"
+                  type="email"
+                  name="contact[email]"
+                  class="field__input"
+                  value="{{ form.email }}"
+                  aria-required="true"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  autocomplete="email"
+                  {% if form.errors %}
+                    autofocus
+                    aria-invalid="true"
+                    aria-describedby="Newsletter-error--{{ section.id }}"
+                  {% elsif form.posted_successfully? %}
+                    aria-describedby="Newsletter-success--{{ section.id }}"
+                  {% endif %}
+                  placeholder="{{ 'newsletter.label' | t }}"
+                  required
+                >
+                <label class="field__label" for="NewsletterForm--{{ section.id }}">
+                  {{ 'newsletter.label' | t }}
+                </label>
+                <button
+                  type="submit"
+                  class="newsletter-form__button field__button"
+                  aria-label="{{ 'newsletter.button_label' | t }}"
+                >
+                  {% render 'icon-arrow' %}
+                </button>
+              </div>
+              {%- if form.errors -%}
+                <small class="newsletter-form__message form__message" id="Newsletter-error--{{ section.id }}">
+                  {%- render 'icon-error' -%}
+                  {{- form.errors.translated_fields.email | capitalize }}
+                  {{ form.errors.messages.email -}}
+                </small>
+              {%- endif -%}
+            </div>
+            {%- if form.posted_successfully? -%}
+              <h3
+                class="newsletter-form__message newsletter-form__message--success form__message"
+                id="Newsletter-success--{{ section.id }}"
+                tabindex="-1"
+                autofocus
+              >
+                {% render 'icon-success' -%}
+                {{- 'newsletter.success' | t }}
+              </h3>
+            {%- endif -%}
+          {% endform %}
+        {%- endif -%}
+      </div>
+    </aside>
+  </div>
+  <script>
+      //document.querySelector(".copyright__content").addEventListener('click', function (e) {
+      //    e.stopPropagation();
+      //    openPopup();
+      //}, false);
+      
+      var options = JSON.parse(document.querySelector(".popup").getAttribute('data-popup-settings'));
+      function openPopup() {
+        if (!options['showOnlyOnce'] || options['showOnlyOnce'] && localStorage.getItem('newsletter_popup') === null) {
+          localStorage.setItem('newsletter_popup', 'true');
+    
+          document.querySelector(".popup-overlay").style.visibility = 'visible';
+          document.querySelector(".popup-overlay").style.opacity = 1;
+          document.querySelector(".popup").style.visibility = 'visible';
+          document.querySelector(".popup").style.opacity = 1;        
+        }
+      }
+    
+      function closePopup() {
+        document.querySelector(".popup").style.display = 'none';
+        document.querySelector(".popup-overlay").style.display = 'none';
+      }
+    
+      document.querySelector(".popup-newsletter-close").addEventListener('click', function () {
+        closePopup();
+      }, false);
+    
+      document.querySelector(".popup-overlay").addEventListener('click', function () {
+        closePopup();
+      }, false);
+    
+      document.querySelector(".popup").addEventListener('click', function (e) {
+        e.stopPropagation();
+      }, false);
+    
+      document.querySelector("#form-popup").addEventListener('submit', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    
+        // POST /contact
+        //Get the form
+        //var data = new FormData(document.getElementById("form-popup"));
+    
+        //Use fetch syntax to submit the form data
+        //fetch("/contact", { method: "post", body: data });
+        
+        closePopup();
+        this.submit();
+      }, true);
+    
+      setTimeout(openPopup, options['apparitionDelay'] * 1000);
+  </script>
+  
+{%- endunless -%}
+{%- endunless -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Newsletter Popup",
+  "class": "newsletter-popup",
+  "settings": [
+      {
+        "type": "checkbox",
+        "id": "enable_popup",
+        "label": "Enable popup",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "show_only_on_index",
+        "label": "Show only on home page",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_only_for_visitors",
+        "label": "Disable for account holders",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_only_once",
+        "label": "Show once to visitors",
+        "default": true
+      },
+      {
+        "type": "image_picker",
+        "id": "bg-image",
+        "label": "t:sections.image-banner.settings.image.label"
+      },
+      {
+        "type": "text",
+        "id": "title",
+        "label": "Heading",
+        "default": "Popup"
+      },
+      {
+        "type": "richtext",
+        "id": "content",
+        "label": "Text",
+        "default": "<p>You can use this popup to display some useful information to your customers.</p>"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_newsletter",
+        "label": "Show newsletter form",
+        "info": "Customers who subscribe will have their email address added to the \"accepts marketing\" [customer list](/admin/customers?query=&accepts_marketing=1).",
+        "default": true
+      },
+      {
+        "type": "range",
+        "id": "apparition_delay",
+        "min": 0,
+        "max": 30,
+        "step": 5,
+        "unit": "sec",
+        "label": "Delay until the popup appears",
+        "default": 10
+      }
+    ]
+}
+{% endschema %}
+
+{% stylesheet %}
+  .popup-overlay {
+      position: fixed;
+      height: 100%;
+      width: 100% !important;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 100;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.25s linear;
+  }
+
+  .popup {
+    background-color: #fff;
+    background-repeat: no-repeat;
+    background-size: cover;
+    border-radius: 5px;
+    padding: 50px;
+    box-shadow: rgba(0, 0, 0, 0.24) 0px 1px 3px;
+    position: absolute;
+    z-index: 25;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 600px !important;
+    width: 100%;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.25s linear;
+  }
+
+  .popup-dialog {
+    padding-left: 50%;
+  }
+
+  .popup-newsletter-content {
+    margin-bottom: 10px;
+  }
+
+  @media only screen and (max-width: 767px) {
+    .popup {
+      padding: 40px 30px;
+      border-radius: 0px;
+      background-size: 0;
+    }
+
+    .popup-dialog {
+      padding-left: 0px;
+    }
+  }
+
+  .popup-newsletter-close {
+      position: absolute;
+      right: 20px;
+      top: 16px;
+      color: var(--heading-color);
+  }
+
+  .popup-newsletter-close svg {
+      width: 15px;
+      height: 15px;
+  }
+
+  .popup-newsletter-title {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 3rem;
+      margin-top: 0px;
+  }
+{% endstylesheet %}
